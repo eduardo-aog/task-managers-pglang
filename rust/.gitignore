@@ -1,0 +1,11 @@
+/target
+debug/             # También se usa a veces en lugar de target
+
+# Archivos de respaldo de rustfmt
+**/*.rs.bk         # Backups generados por rustfmt
+
+# Archivos de debugging en Windows
+*.pdb              # Información de debugging en MSVC
+
+# Archivo de bloqueo de dependencias (para bibliotecas)
+# Cargo.lock       # Descomenta si es una biblioteca (comentado para ejecutables)
