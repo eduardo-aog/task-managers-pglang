@@ -1,0 +1,21 @@
+# Binarios y Ejecutables
+# ----------------------
+task-cli
+task-cli.exe
+*.exe
+*.bin
+
+# Archivos de Datos (Privacidad y Seguridad)
+# ------------------------------------------
+# No queremos subir las tareas de los usuarios ni sus credenciales
+users.json
+tasks_*.json
+
+# Archivos de Sesión
+# ------------------
+# Este archivo contiene quién está logueado actualmente en tu PC
+.session.json
+
+# Dependencias y Herramientas de Go
+# ---------------------------------
+vendor/
