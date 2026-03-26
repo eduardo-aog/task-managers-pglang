@@ -1,10 +1,9 @@
 use crate::task_manager::{Status, TaskManager};
 use std::io::{self, Write};
 
-const FILE_PATH: &str = "tasks.json";
-
 pub fn run() {
-    let mut manager = TaskManager::load_from_file(FILE_PATH); // Cargado del JSON
+    let mut current_user: Option<String> = None;
+    let mut manager = TaskManager::new(); // Inicia vacío, cargará al hacer login
 
     println!("========================================");
     println!("          RusTask Manager");
@@ -13,7 +12,11 @@ pub fn run() {
 
     loop {
         // Para mantener el programa en ejecución
-        print!("task-cli> ");
+        if let Some(ref user) = current_user {
+            print!("{}@task-cli> ", user);
+        } else {
+            print!("task-cli> ");
+        }
         io::stdout().flush().unwrap(); // Asegura que el prompt se imprima antes de leer
 
         let mut input = String::new();
@@ -33,6 +36,48 @@ pub fn run() {
         let args: Vec<&str> = input.split_whitespace().collect();
         let command = args[0];
 
+        // 1. Comandos que no requieren un usuario activo
+        match command {
+            "login" | "user" => {
+                if args.len() < 2 {
+                    println!("error: nombre de usuario necesario (ejemplo: login eduardo)");
+                } else {
+                    let user = args[1].to_string();
+                    let file_path = format!("{}_tasks.json", user);
+                    manager = TaskManager::load_from_file(&file_path);
+                    current_user = Some(user.clone());
+                    println!("Usuario '{}' seleccionado correctamente.", user);
+                }
+                continue;
+            }
+            "help" => {
+                print_help();
+                continue;
+            }
+            "clear" => {
+                print!("\x1B[2J\x1B[1;1H\n");
+                io::stdout().flush().unwrap();
+                continue;
+            }
+            "exit" | "quit" => {
+                println!("cambios guardados\nbye");
+                break;
+            }
+            _ => {}
+        }
+
+        // 2. Verificamos si hay un usuario activo para el resto de comandos
+        let user = match &current_user {
+            Some(u) => u,
+            None => {
+                println!("error: debes seleccionar un usuario primero. Usa: login <nombre>");
+                continue;
+            }
+        };
+
+        let file_path = format!("{}_tasks.json", user);
+
+        // 3. Comandos de gestión de tareas
         match command {
             "add" => {
                 if args.len() < 2 {
@@ -40,7 +85,7 @@ pub fn run() {
                 } else {
                     let description = args[1..].join(" ");
                     manager.add(description);
-                    manager.save_to_file(FILE_PATH);
+                    manager.save_to_file(&file_path);
                 }
             }
             "update" => {
@@ -51,7 +96,7 @@ pub fn run() {
                 } else if let Ok(id) = args[1].parse::<i32>() {
                     let new_description = args[2..].join(" ");
                     manager.update_description(id, new_description);
-                    manager.save_to_file(FILE_PATH);
+                    manager.save_to_file(&file_path);
                 } else {
                     println!("error: el ID debe ser un número entero");
                 }
@@ -61,16 +106,16 @@ pub fn run() {
                     println!("error: ID de la tarea a eliminar necesario");
                 } else if let Ok(id) = args[1].parse::<i32>() {
                     manager.delete(id);
-                    manager.save_to_file(FILE_PATH);
+                    manager.save_to_file(&file_path);
                 } else {
                     println!("error: el ID debe ser un número entero");
                 }
             }
             "mark-in-progress" => {
-                update_status_cli(&mut manager, &args, Status::InProgress);
+                update_status_cli(&mut manager, &args, Status::InProgress, &file_path);
             }
             "mark-done" => {
-                update_status_cli(&mut manager, &args, Status::Done);
+                update_status_cli(&mut manager, &args, Status::Done, &file_path);
             }
             "list" => {
                 if args.len() == 1 {
@@ -85,17 +130,6 @@ pub fn run() {
                     }
                 }
             }
-            "clear" => {
-                // \x1B[2J limpia toda la pantalla
-                // \x1B[1;1H mueve el cursor a la esquina superior izquierda
-                print!("\x1B[2J\x1B[1;1H\n");
-                io::stdout().flush().unwrap();
-            }
-            "help" => print_help(),
-            "exit" | "quit" => {
-                println!("cambios guardado\nbye");
-                break; // Rompe el ciclo y finaliza el programa
-            }
             _ => {
                 println!(
                     "error: comando '{}' no reconocido \nescribe 'help'.",
@@ -107,12 +141,12 @@ pub fn run() {
 }
 
 // Conversión de tipos para evitar errores
-fn update_status_cli(manager: &mut TaskManager, args: &[&str], status: Status) {
+fn update_status_cli(manager: &mut TaskManager, args: &[&str], status: Status, file_path: &str) {
     if args.len() < 2 {
         println!("error: ID de la tarea necesario");
     } else if let Ok(id) = args[1].parse::<i32>() {
         manager.update_status(id, status);
-        manager.save_to_file(FILE_PATH);
+        manager.save_to_file(file_path);
     } else {
         println!("error: el ID debe ser un número entero");
     }
@@ -121,6 +155,7 @@ fn update_status_cli(manager: &mut TaskManager, args: &[&str], status: Status) {
 fn print_help() {
     // Comando help
     println!("  --- Comandos ---");
+    println!("  login <nombre>             - Selecciona o crea un usuario (usa su propio JSON)");
     println!("  add <descripción>          - Añade una nueva tarea");
     println!("  update <id> <descripción>  - Actualiza la descripción");
     println!("  delete <id>                - Elimina una tarea");
