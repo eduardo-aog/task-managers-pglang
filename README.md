@@ -13,34 +13,39 @@ La versión en Go está construida utilizando `Cobra`, una de las librerías má
 ### Requisitos previos
 - Go 1.20 o superior.
 
-### Uso
+### Compilación y Uso
 
-Para usar el CLI de Go, entra primero en el directorio y compila/ejecuta pasándole los comandos:
+Para usar el CLI en Go de manera óptima, lo ideal es compilarlo primero creando un archivo binario llamado `task-cli`:
 
 ```bash
 cd go/
+go build -o task-cli main.go
+```
 
+Una vez compilado, puedes invocar la aplicación y todos sus comandos usando directamente el binario `./task-cli`:
+
+```bash
 # 1. Registrar a un nuevo usuario
-go run main.go register <usuario> <contraseña>
+./task-cli register <usuario> <contraseña>
 
 # 2. Iniciar sesión en el tracker
-go run main.go login <usuario> <contraseña>
+./task-cli login <usuario> <contraseña>
 
 # 3. Añadir una tarea (asegúrate de usar comillas para la descripción completa)
-go run main.go add "Aprender a usar canales en Go"
+./task-cli add "Aprender a usar canales en Go"
 
 # 4. Actualizar una tarea
-go run main.go update <id> "Nueva descripción"
+./task-cli update <id> "Nueva descripción"
 
 # 5. Cambiar el estado de las tareas
-go run main.go markInProgress <id>
-go run main.go markDone <id>
+./task-cli markInProgress <id>
+./task-cli markDone <id>
 
 # 6. Otros comandos interactivos
-go run main.go list
-go run main.go delete <id>
-go run main.go status
-go run main.go logout
+./task-cli list
+./task-cli delete <id>
+./task-cli status
+./task-cli logout
 ```
 
 ---

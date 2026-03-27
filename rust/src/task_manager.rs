@@ -10,6 +10,7 @@ pub enum Status {
 }
 
 impl Status {
+    /// Convierte el enum Status a su representación en cadena de texto ("todo", "in-progress", "done").
     fn as_str(&self) -> &str {
         match self {
             Status::Todo => "todo",
@@ -18,6 +19,8 @@ impl Status {
         }
     }
 
+    /// Convierte una cadena de texto a su valor correspondiente en el enum Status.
+    /// Si el texto no coincide con "in-progress" o "done", retorna Status::Todo por defecto.
     fn from_str(s: &str) -> Self {
         match s {
             "in-progress" => Status::InProgress,
@@ -36,6 +39,8 @@ pub struct Task {
 }
 
 impl Task {
+    /// Crea una nueva tarea con el ID y descripción proporcionados.
+    /// Inicializa el estado en `Todo` y establece la fecha de creación y actualización al momento actual.
     pub fn new(id: i32, description: String) -> Self {
         let now = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
         Task {
@@ -47,11 +52,13 @@ impl Task {
         }
     }
 
+    /// Actualiza el estado de la tarea y modifica la fecha de actualización (`updated_at`) al momento actual.
     pub fn update_status(&mut self, status: Status) {
         self.status = status;
         self.updated_at = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
     }
 
+    /// Muestra la información de la tarea en la consola de forma formateada.
     pub fn show(&self) {
         println!(
             "[{}] {} | Estatus: {:?} | Creada: {}",
@@ -60,6 +67,7 @@ impl Task {
     }
 
     // Serialización a JSON
+    /// Serializa la estructura de la tarea a una cadena en formato JSON.
     fn to_json(&self) -> String {
         format!(
             r#"{{"id":{},"description":"{}","status":"{}","created_at":"{}","updated_at":"{}"}}"#,
@@ -78,6 +86,7 @@ pub struct TaskManager {
 }
 
 impl TaskManager {
+    /// Crea una nueva instancia vacía de TaskManager, inicializando el ID de la próxima tarea en 1.
     pub fn new() -> Self {
         TaskManager {
             tasks: Vec::new(),
@@ -87,6 +96,8 @@ impl TaskManager {
 
     // Todo esto es manejo del archivo JSON
 
+    /// Carga las tareas desde un archivo JSON. Si el archivo no existe o hay un error,
+    /// retorna un nuevo TaskManager vacío. También calcula el `next_id` basándose en las tareas cargadas.
     pub fn load_from_file(filename: &str) -> Self {
         let mut manager = TaskManager::new();
 
@@ -105,6 +116,8 @@ impl TaskManager {
         manager
     }
 
+    /// Guarda todas las tareas actuales en un archivo en formato JSON.
+    /// Crea el archivo si no existe o lo sobrescribe si ya tiene contenido.
     pub fn save_to_file(&self, filename: &str) {
         let json_tasks: Vec<String> = self.tasks.iter().map(|t| t.to_json()).collect();
         let json_string = format!("[\n  {}\n]", json_tasks.join(",\n  "));
@@ -121,6 +134,8 @@ impl TaskManager {
     }
 
     // Parseador manual simple
+    /// Analiza (parsea) manualmente una cadena JSON para convertirla en una lista (`Vec`) de tareas.
+    /// Divide el string por los delimitadores de objetos y extrae cada campo.
     fn parse_json(json: &str) -> Vec<Task> {
         let mut tasks = Vec::new();
         let parts: Vec<&str> = json.split("},{").collect();
@@ -149,6 +164,7 @@ impl TaskManager {
         tasks
     }
 
+    /// Función auxiliar para extraer el valor numérico (u otro valor bruto) asociado a una clave dentro de un fragmento JSON.
     fn extract_value(json_part: &str, key: &str) -> String {
         if let Some(start) = json_part.find(key) {
             let value_start = start + key.len();
@@ -159,6 +175,7 @@ impl TaskManager {
         String::new()
     }
 
+    /// Función auxiliar para extraer y limpiar una cadena de texto asociada a una clave dentro de un fragmento JSON.
     fn extract_string(json_part: &str, key: &str) -> String {
         if let Some(start) = json_part.find(key) {
             let value_start = start + key.len();
@@ -171,6 +188,8 @@ impl TaskManager {
 
     // Métodos del Task Manager
 
+    /// Añade una nueva tarea a la lista con la descripción proporcionada.
+    /// Asigna automáticamente el ID e incrementa el contador `next_id`.
     pub fn add(&mut self, description: String) {
         let task = Task::new(self.next_id, description);
         self.tasks.push(task);
@@ -178,6 +197,8 @@ impl TaskManager {
         self.next_id += 1;
     }
 
+    /// Modifica la descripción de una tarea existente buscando por su ID.
+    /// Si la encuentra, actualiza el campo de descripción y la fecha de modificación.
     pub fn update_description(&mut self, id: i32, new_description: String) {
         if let Some(task) = self.tasks.iter_mut().find(|t| t.id == id) {
             task.description = new_description;
@@ -188,6 +209,8 @@ impl TaskManager {
         }
     }
 
+    /// Modifica el estado de una tarea existente buscando por su ID.
+    /// Utiliza el método `update_status` de la tarea para actualizar también la fecha.
     pub fn update_status(&mut self, id: i32, status: Status) {
         if let Some(task) = self.tasks.iter_mut().find(|t| t.id == id) {
             task.update_status(status);
@@ -197,6 +220,7 @@ impl TaskManager {
         }
     }
 
+    /// Elimina una tarea de la lista buscando por su ID y notifica el resultado de la operación en consola.
     pub fn delete(&mut self, id: i32) {
         let initial_len = self.tasks.len();
         self.tasks.retain(|t| t.id != id);
@@ -207,6 +231,8 @@ impl TaskManager {
         }
     }
 
+    /// Muestra en la consola todas las tareas registradas en el TaskManager.
+    /// Si no hay tareas, informa al usuario.
     pub fn list_all(&self) {
         if self.tasks.is_empty() {
             println!("No hay tareas registradas.");
@@ -217,6 +243,7 @@ impl TaskManager {
         }
     }
 
+    /// Filtra y muestra por consola las tareas que coincidan con el estado proporcionado.
     pub fn list_by_status(&self, status: Status) {
         let filtered: Vec<&Task> = self.tasks.iter().filter(|t| t.status == status).collect();
         if filtered.is_empty() {
@@ -228,6 +255,7 @@ impl TaskManager {
         }
     }
 
+    /// Filtra y muestra por consola las tareas que no estén en estado completado (`Done`).
     pub fn list_not_done(&self) {
         let filtered: Vec<&Task> = self
             .tasks

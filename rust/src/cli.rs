@@ -1,6 +1,9 @@
 use crate::task_manager::{Status, TaskManager};
 use std::io::{self, Write};
 
+/// Función principal que arranca la interfaz de línea de comandos (CLI).
+/// Muestra un mensaje de bienvenida y entra en un bucle infinito ("loop")
+/// esperando y procesando los comandos del usuario (con soporte multi-usuario).
 pub fn run() {
     let mut current_user: Option<String> = None;
     let mut manager = TaskManager::new(); // Inicia vacío, cargará al hacer login
@@ -141,6 +144,9 @@ pub fn run() {
 }
 
 // Conversión de tipos para evitar errores
+/// Función auxiliar para actualizar el estado de una tarea desde la consola.
+/// Verifica que se haya suministrado el ID correcto, intenta convertirlo a número,
+/// y si tiene éxito, realiza la actualización en memoria y guarda en disco.
 fn update_status_cli(manager: &mut TaskManager, args: &[&str], status: Status, file_path: &str) {
     if args.len() < 2 {
         println!("error: ID de la tarea necesario");
@@ -152,6 +158,8 @@ fn update_status_cli(manager: &mut TaskManager, args: &[&str], status: Status, f
     }
 }
 
+/// Muestra en la consola la lista de comandos disponibles y su sintaxis.
+/// Sirve como menú de ayuda y referencia rápida para el usuario.
 fn print_help() {
     // Comando help
     println!("  --- Comandos ---");
