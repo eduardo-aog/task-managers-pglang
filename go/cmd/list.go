@@ -49,9 +49,10 @@ var listCmd = &cobra.Command{
 
 		count := 0
 		for _, t := range tasks {
-			if filter != "" && t.Status != filter {
+			if (filter != "" && t.Status != filter) || t.IsDeleted == true {
 				continue
 			}
+
 
 			fecha := t.CreatedAt.Format("02-Jan-2006")
 

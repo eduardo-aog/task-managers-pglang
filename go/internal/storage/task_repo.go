@@ -66,6 +66,7 @@ func AddTask(username string, description string) (models.Task, error) {
 		Status:      "todo",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
+		IsDeleted:   false,
 	}
 
 	tasks = append(tasks, newTask)
@@ -85,7 +86,7 @@ func UpdateTask(username string, id int, newDescription string) error {
 	}
 
 	for i, task := range tasks {
-		if task.ID == id {
+		if task.ID == id && task.IsDeleted == false {
 			tasks[i].Description = newDescription
 			tasks[i].UpdatedAt = time.Now()
 
@@ -104,7 +105,7 @@ func UpdateStatus(username string, id int, newStatus string) error {
 	}
 
 	for i, task := range tasks {
-		if task.ID == id {
+		if task.ID == id && task.IsDeleted == false {
 			tasks[i].Status = newStatus
 			tasks[i].UpdatedAt = time.Now()
 			return saveTasks(username, tasks)
@@ -121,9 +122,11 @@ func DeleteTask(username string, id int) error {
 	}
 
 	for i, task := range tasks {
-		if task.ID == id {
-			tasks = append(tasks[:i], tasks[i+1:]...)
+		if task.ID == id && task.IsDeleted == false {
+			tasks[i].IsDeleted = true
 			return saveTasks(username, tasks)
+			//tasks = append(tasks[:i], tasks[i+1:]...)
+			//return saveTasks(username, tasks)
 		}
 	}
 	return fmt.Errorf("No se encontró la tarea con ID %d", id)
